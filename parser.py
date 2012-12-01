@@ -8,14 +8,6 @@ kid_keys = ["name","sex","age","lost_age","lost_date","character","area","spot",
 kid = {}
 kids = []
 
-
-class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
-    def http_error_302(self, req, fp, code, msg, headers):
-        print "Cookie Manip Right Here"
-        return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
-
-    http_error_301 = http_error_303 = http_error_307 = http_error_302
-
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
 	current_key=None
@@ -55,12 +47,11 @@ handlers = [http_handler,redirect_handler]
 
 opener = urllib2.build_opener(http_handler,redirect_handler)
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-response = opener.open("http://www.example.com/200.html")
 
 baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
 
-for i in range(30):
+for i in range(10):
 	id = i+90
 	kid["id"] = id
 	response = opener.open(baseurl+parameter+str(id))
