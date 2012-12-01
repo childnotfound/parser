@@ -16,10 +16,14 @@ kids = []
 class MyHTMLParser(HTMLParser):
 	current_key=None
 	tags_to_data=None
+	stag_count=0
+	etag_count=0
 
 	def handle_starttag(self, tag, attrs):
-		""
-			
+		if self.stag_count == 204:
+			kid["photo_url"]=attrs[0][1]
+		self.stag_count=self.stag_count+1
+
 	def handle_endtag(self, tag):
 		""
 			
@@ -57,13 +61,11 @@ parameter = "?mode=show&temp=0&id="
 
 photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 
-for i in range(10):
-	id = i+90
+for i in range(1):
+	id = i+130
 	kid["id"] = id
 	response = opener.open(baseurl+parameter+str(id))
 	
-	print response.code
-
 	html=response.read()
 	if keys_big5[3] not in html:
 		continue
@@ -74,4 +76,3 @@ for i in range(10):
 		print str(k)+"="+str(v)
 
 	kids.append(kid)
-
