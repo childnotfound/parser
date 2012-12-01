@@ -65,7 +65,7 @@ for i in range(10):
 	print response.code
 
 	html=response.read()
-	if keys_utf8[3] not in html:
+	if keys_big5[3] not in html:
 		continue
 
 	parser.feed(html)
