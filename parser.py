@@ -4,6 +4,10 @@ import urllib, urllib2
 
 #keys_utf8 and kid_keys should be synced.
 keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
+keys_big5 = []
+for i,v in enumerate(keys_utf8):
+	keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
+
 kid_keys = ["name","sex","age","lost_age","lost_date","character","area","spot","reason","id","photo_url"]
 kid = {}
 kids = []
@@ -51,6 +55,8 @@ opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
 
+photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+
 for i in range(10):
 	id = i+90
 	kid["id"] = id
@@ -59,6 +65,8 @@ for i in range(10):
 	print response.code
 
 	html=response.read()
+	if keys_utf8[3] not in html:
+		continue
 
 	parser.feed(html)
 
