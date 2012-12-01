@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from HTMLParser import HTMLParser
 import urllib, urllib2
+import sys
+
 
 #keys_utf8 and kid_keys should be synced.
 keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
@@ -45,34 +47,42 @@ class MyHTMLParser(HTMLParser):
 			self.tags_to_data = None
 			self.current_key = None
 
-# instantiate the parser and fed it some HTML
-parser = MyHTMLParser()
+if __name__ == '__main__':
 
-http_handler = urllib2.HTTPHandler(debuglevel=0)
-redirect_handler = urllib2.HTTPRedirectHandler()
+	if len(sys.argv) != 3:
+		print "usage: parser.py start_id count"
+		sys.exit()
 
-handlers = [http_handler,redirect_handler]
+	# instantiate the parser and fed it some HTML
+	parser = MyHTMLParser()
 
-opener = urllib2.build_opener(http_handler,redirect_handler)
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+	http_handler = urllib2.HTTPHandler(debuglevel=0)
+	redirect_handler = urllib2.HTTPRedirectHandler()
 
-baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
-parameter = "?mode=show&temp=0&id="
+	handlers = [http_handler,redirect_handler]
 
-photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+	opener = urllib2.build_opener(http_handler,redirect_handler)
+	opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-for i in range(1):
-	id = i+130
-	kid["id"] = id
-	response = opener.open(baseurl+parameter+str(id))
-	
-	html=response.read()
-	if keys_big5[3] not in html:
-		continue
+	baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
+	parameter = "?mode=show&temp=0&id="
 
-	parser.feed(html)
+	photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 
-	for k,v in kid.iteritems():
-		print str(k)+"="+str(v)
+	for i in range(int(sys.argv[2])):
+		id = i+int(sys.argv[1])
+		response = opener.open(baseurl+parameter+str(id))
+		
+		html=response.read()
+		if keys_big5[3] not in html:
+			continue
+		
+		kid = {}
+		kid["id"] = id
+		parser.feed(html)
+		kids.append(kid.copy())
 
-	kids.append(kid)
+	for i in kids:
+		print "=" * 20
+		for k,v in i.iteritems():
+			print str(k)+"="+str(v)
