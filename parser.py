@@ -37,7 +37,7 @@ class MyHTMLParser(HTMLParser):
 	def handle_data(self, data):
 		data = unicode(data,'Big5','ignore').encode('utf-8','ignore')
 
-		# the key and value for kid's name,sex,age,etc
+		# the key and value pairs for kid's name,sex,age,etc
 		# the value is 3 tags after key
 		if self.current_key == None:
 
@@ -80,9 +80,14 @@ if __name__ == '__main__':
 		kid = {}
 		kid["id"] = id
 		parser.feed(html)
+
+		print "=" * 20
+		for k,v in kid.iteritems():
+			print str(k)+"="+str(v)
+
 		kids.append(kid.copy())
 
-	for i in kids:
-		print "=" * 20
-		for k,v in i.iteritems():
-			print str(k)+"="+str(v)
+#	for i in kids:
+#		print "=" * 20
+#		for k,v in i.iteritems():
+#			print str(k)+"="+str(v)
