@@ -22,9 +22,10 @@ class MyHTMLParser(HTMLParser):
 	etag_count=0
 
 	def handle_starttag(self, tag, attrs):
-		if self.stag_count == 204:
-			kid["photo_url"]=attrs[0][1]
-		self.stag_count=self.stag_count+1
+		if len(attrs) == 4:
+			if "miss_focusimages" in attrs[0][1]:
+				kid["photo_url"]=attrs[0][1]
+			self.stag_count=0
 
 	def handle_endtag(self, tag):
 		""
