@@ -4,15 +4,17 @@ import urllib, urllib2
 import sys
 
 
-#keys_utf8 and kid_keys should be synced.
+#keys_utf8 and keys should be synced.
 keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
 keys_big5 = []
-for i,v in enumerate(keys_utf8):
-	keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
-kid_keys = ["name","sex","age","lost_age","lost_date","character","area","spot","reason","id","photo_url"]
+keys = ["name","sex","age","lost_age","lost_date","character","area","spot","reason","id","photo_url"]
 kid = {}
 kids = []
+
+baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
+parameter = "?mode=show&temp=0&id="
+photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -22,6 +24,8 @@ class MyHTMLParser(HTMLParser):
 	etag_count=0
 
 	def handle_starttag(self, tag, attrs):
+		# the photo_url in html source, 4 elements, get the value of the first one.
+		# <img src="http://www.missingkids.org.tw/miss_focusimages/12527_s.jpg" width=75 height=100 border=0>
 		if len(attrs) == 4:
 			if "miss_focusimages" in attrs[0][1]:
 				kid["photo_url"]=attrs[0][1]
@@ -33,7 +37,10 @@ class MyHTMLParser(HTMLParser):
 	def handle_data(self, data):
 		data = unicode(data,'Big5','ignore').encode('utf-8','ignore')
 
+		# the key and value for kid's name,sex,age,etc
+		# the value is 3 tags after key
 		if self.current_key == None:
+
 			for key in keys_utf8:
 				if key in data:
 					self.current_key = key
@@ -43,7 +50,7 @@ class MyHTMLParser(HTMLParser):
 
 		if self.tags_to_data == 0:
 			i = keys_utf8.index(self.current_key)
-			i = kid_keys[i]
+			i = keys[i]
 			kid[i] = data.strip()
 			self.tags_to_data = None
 			self.current_key = None
@@ -51,24 +58,16 @@ class MyHTMLParser(HTMLParser):
 if __name__ == '__main__':
 
 	if len(sys.argv) != 3:
-		print "usage: parser.py start_id count"
+		print "usage: %s start_id count" % sys.argv[0]
 		sys.exit()
 
-	# instantiate the parser and fed it some HTML
 	parser = MyHTMLParser()
-
 	http_handler = urllib2.HTTPHandler(debuglevel=0)
-	redirect_handler = urllib2.HTTPRedirectHandler()
-
-	handlers = [http_handler,redirect_handler]
-
-	opener = urllib2.build_opener(http_handler,redirect_handler)
+	opener = urllib2.build_opener(http_handler)
 	opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-	baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
-	parameter = "?mode=show&temp=0&id="
-
-	photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+	for i,v in enumerate(keys_utf8):
+		keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
 	for i in range(int(sys.argv[2])):
 		id = i+int(sys.argv[1])
