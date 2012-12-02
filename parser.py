@@ -126,8 +126,13 @@ if __name__ == '__main__':
 
 	for i in range(int(sys.argv[2])):
 		id = i+int(sys.argv[1])
-		response = opener.open(baseurl+parameter+str(id))
-		
+
+		try:
+			response = opener.open(baseurl+parameter+str(id))
+		except:
+			print "can't access %s" % baseurl
+			continue
+
 		html=response.read()
 	
 		# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
