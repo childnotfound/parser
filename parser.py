@@ -23,23 +23,28 @@ baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
 photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 
-# missingAge=3 歲 0 月, index=3
+days_in_year = 365.25
+days_in_month = 30.4375 # days_in_year/12
+
+# missingAge=3 歲 0 月
 def missingAge_to_days(s):
-	print s
-	days_in_year = 365.25
-	days_in_month = 30.4375 # days_in_year/12
 	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
 	m=p.match(s)
-	print m
 	d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
 	return datetime.timedelta(days=d)
 
-# missingDate=民國89年6月, index=4
+# missingDate=民國89年6月
 def missingDate_to_datetime(s):
 	p=re.compile(r'\s*民國\s*(\d+)\s*年\s*(\d+)\s*月\s*')
 	m=p.match(s)
 	# the day is 1 for datetime, should be discard when printing out.
-	return datetime.date(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
+	return datetime.datetime(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
+
+def compute_currentAge(missingDateInDatetime,missingAgeInDays):
+	d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
+	y = int(d.days / days_in_year)
+	m = round((d.days % days_in_year) / days_in_month)
+	return y,m
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -76,11 +81,18 @@ class MyHTMLParser(HTMLParser):
 			i = keys_utf8.index(self.current_key)
 			i = keys[i]
 			kid[i] = data.strip()
+
 			if i == "missingAge":
 				kid["missingAgeInDays"] = missingAge_to_days(kid[i])
 			
 			if i == "missingDate":
 				kid["missingDateInDatetime"] = missingDate_to_datetime(kid[i])
+
+			if ("missingAgeInDays" in kid) \
+				and ("missingDateInDatetime" in kid) \
+				and ("currentAgeByComputing" not in kid):
+				year,month = compute_currentAge(kid["missingDateInDatetime"], kid["missingAgeInDays"])
+				kid["currentAgeByComputing"] = "%s years, %s months" % (year,month)
 
 			self.tags_to_value = None
 			self.current_key = None
