@@ -20,7 +20,7 @@ photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
 	current_key=None
-	tags_to_data=None
+	tags_to_value=None
 	stag_count=0
 	etag_count=0
 
@@ -37,21 +37,22 @@ class MyHTMLParser(HTMLParser):
 	def handle_data(self, data):
 		data = unicode(data,'Big5','ignore').encode('utf-8','ignore')
 
-		# the key and value pairs for kid's name,sex,age,etc
+		# the key and value pairs for kid's information
 		# the value is 3 tags after key
 		if self.current_key == None:
 			for key in keys_utf8:
 				if key in data:
 					self.current_key = key
-					self.tags_to_data = 3
+					self.tags_to_value = 3
 		else:
-			self.tags_to_data = self.tags_to_data-1
+			self.tags_to_value = self.tags_to_value-1
 
-		if self.tags_to_data == 0:
+		# the value found
+		if self.tags_to_value == 0:
 			i = keys_utf8.index(self.current_key)
 			i = keys[i]
 			kid[i] = data.strip()
-			self.tags_to_data = None
+			self.tags_to_value = None
 			self.current_key = None
 
 if __name__ == '__main__':
@@ -60,7 +61,6 @@ if __name__ == '__main__':
 		print "usage: %s start_id count" % sys.argv[0]
 		sys.exit()
 
-	parser = MyHTMLParser()
 	http_handler = urllib2.HTTPHandler(debuglevel=0)
 	opener = urllib2.build_opener(http_handler)
 	opener.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -68,6 +68,9 @@ if __name__ == '__main__':
 	# the page is in big5, make keys in big5 for comparision.
 	for i,v in enumerate(keys_utf8):
 		keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
+
+	
+	parser = MyHTMLParser()
 
 	for i in range(int(sys.argv[2])):
 		id = i+int(sys.argv[1])
@@ -82,6 +85,7 @@ if __name__ == '__main__':
 		
 		kid = {}
 		kid["id"] = id
+
 		parser.feed(html)
 
 		print "=" * 20
