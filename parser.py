@@ -21,7 +21,7 @@ kids = []
 
 baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
-photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+avatar_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
 
 days_in_year = 365.25
 days_in_month = 30.4375 # days_in_year/12
