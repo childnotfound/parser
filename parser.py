@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-# crawler for childnotfound project 
-
 from HTMLParser import HTMLParser
 import urllib, urllib2
 import sys
 
-#keys_utf8 and keys should be synced in the same order.
-keys_big5 = []
-keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
-keys = ["name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation","missingCause","avatar","id"]
 
+#keys_utf8 and keys should be synced.
+keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
+keys_big5 = []
+
+keys = ["name","sex","age","lost_age","lost_date","character","area","spot","reason","id","photo_url"]
 kid = {}
 kids = []
 
@@ -25,11 +24,12 @@ class MyHTMLParser(HTMLParser):
 	etag_count=0
 
 	def handle_starttag(self, tag, attrs):
-		# the avatar in html source contains 4 elements, get the value of the first one.
+		# the photo_url in html source, 4 elements, get the value of the first one.
 		# <img src="http://www.missingkids.org.tw/miss_focusimages/12527_s.jpg" width=75 height=100 border=0>
 		if len(attrs) == 4:
 			if "miss_focusimages" in attrs[0][1]:
-				kid["avatar"]=attrs[0][1]
+				kid["photo_url"]=attrs[0][1]
+			self.stag_count=0
 
 	def handle_endtag(self, tag):
 		""
@@ -40,6 +40,7 @@ class MyHTMLParser(HTMLParser):
 		# the key and value pairs for kid's name,sex,age,etc
 		# the value is 3 tags after key
 		if self.current_key == None:
+
 			for key in keys_utf8:
 				if key in data:
 					self.current_key = key
@@ -65,7 +66,6 @@ if __name__ == '__main__':
 	opener = urllib2.build_opener(http_handler)
 	opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-	# the page is in big5, make keys in big5 for comparision.
 	for i,v in enumerate(keys_utf8):
 		keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
@@ -74,9 +74,6 @@ if __name__ == '__main__':
 		response = opener.open(baseurl+parameter+str(id))
 		
 		html=response.read()
-	
-		# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
-		# so I detect if 失蹤年齡 in the html to make sure there's only one kid information in the page.
 		if keys_big5[3] not in html:
 			continue
 		
@@ -90,10 +87,7 @@ if __name__ == '__main__':
 
 		kids.append(kid.copy())
 
-"""
-# to print out all data after crawling
-	for i in kids:
-		print "=" * 20
-		for k,v in i.iteritems():
-			print str(k)+"="+str(v)
-"""			
+#	for i in kids:
+#		print "=" * 20
+#		for k,v in i.iteritems():
+#			print str(k)+"="+str(v)
