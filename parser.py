@@ -130,8 +130,7 @@ if __name__ == '__main__':
 		try:
 			response = opener.open(baseurl+parameter+str(id))
 		except:
-			print "can't access %s" % baseurl
-			continue
+			print "http error, can't access %s" % baseurl
 
 		html=response.read()
 	
