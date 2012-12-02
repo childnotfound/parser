@@ -140,10 +140,12 @@ if __name__ == '__main__':
 
 		parser.feed(html)
 
+		# now we have the data by id in kid{}
 		print "=" * 20
 		for k,v in kid.iteritems():
 			print str(k)+"="+str(v)
 
+		# chain kid{} to kids[]
 		kids.append(kid.copy())
 
 """
