@@ -30,21 +30,30 @@ days_in_month = 30.4375 # days_in_year/12
 def missingAge_to_days(s):
 	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
 	m=p.match(s)
-	d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
-	return datetime.timedelta(days=d)
+	if m:
+		d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
+		return datetime.timedelta(days=d)
+	else:
+		return None
 
 # missingDate=民國89年6月
 def missingDate_to_datetime(s):
 	p=re.compile(r'\s*民國\s*(\d+)\s*年\s*(\d+)\s*月\s*')
 	m=p.match(s)
-	# the day is 1 for datetime, should be discard when printing out.
-	return datetime.datetime(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
+	if m:
+		# the day is 1 for datetime, should be discard when printing out.
+		return datetime.datetime(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
+	else: 
+		return None
 
 def compute_currentAge(missingDateInDatetime,missingAgeInDays):
-	d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
-	y = int(d.days / days_in_year)
-	m = round((d.days % days_in_year) / days_in_month)
-	return y,m
+	if missingDateInDatetime and missingAgeInDays:
+		d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
+		y = int(d.days / days_in_year)
+		m = round((d.days % days_in_year) / days_in_month)
+		return y,m
+	else: 
+		return None
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -91,8 +100,9 @@ class MyHTMLParser(HTMLParser):
 			if ("missingAgeInDays" in kid) \
 				and ("missingDateInDatetime" in kid) \
 				and ("currentAgeByComputing" not in kid):
-				year,month = compute_currentAge(kid["missingDateInDatetime"], kid["missingAgeInDays"])
-				kid["currentAgeByComputing"] = "%s years, %s months" % (year,month)
+				r = compute_currentAge(kid["missingDateInDatetime"], kid["missingAgeInDays"])
+				if r:
+					kid["currentAgeByComputing"] = "%s years, %s months" % r
 
 			self.tags_to_value = None
 			self.current_key = None
