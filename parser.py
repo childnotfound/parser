@@ -4,11 +4,17 @@
 from HTMLParser import HTMLParser
 import urllib, urllib2
 import sys
+import re
+import datetime 
 
-#keys_utf8 and keys should be synced in the same order.
+# the first 9 keys in keys_utf8 and keys should be synced in the same order.
+# CurrentAge can be computed from missingAge and missingDate
 keys_big5 = []
 keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
-keys = ["name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation","missingCause","avatar","id"]
+keys = [
+	"name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation",
+	"missingCause","avatar","id","missingAgeInDays","missingDateInDatetime","currentAgeByComputing"
+	]
 
 kid = {}
 kids = []
@@ -16,6 +22,24 @@ kids = []
 baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
 photo_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+
+# missingAge=3 歲 0 月, index=3
+def missingAge_to_days(s):
+	print s
+	days_in_year = 365.25
+	days_in_month = 30.4375 # days_in_year/12
+	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
+	m=p.match(s)
+	print m
+	d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
+	return datetime.timedelta(days=d)
+
+# missingDate=民國89年6月, index=4
+def missingDate_to_datetime(s):
+	p=re.compile(r'\s*民國\s*(\d+)\s*年\s*(\d+)\s*月\s*')
+	m=p.match(s)
+	# the day is 1 for datetime, should be discard when printing out.
+	return datetime.date(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -52,6 +76,12 @@ class MyHTMLParser(HTMLParser):
 			i = keys_utf8.index(self.current_key)
 			i = keys[i]
 			kid[i] = data.strip()
+			if i == "missingAge":
+				kid["missingAgeInDays"] = missingAge_to_days(kid[i])
+			
+			if i == "missingDate":
+				kid["missingDateInDatetime"] = missingDate_to_datetime(kid[i])
+
 			self.tags_to_value = None
 			self.current_key = None
 
