@@ -2,7 +2,7 @@
 # crawler for childnotfound project 
 
 from HTMLParser import HTMLParser
-import urllib, urllib2
+import urllib2
 import sys
 import re
 import datetime 
