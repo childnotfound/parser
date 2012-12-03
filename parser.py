@@ -54,6 +54,7 @@ def missingDate_to_datetime(s):
 	else: 
 		return None
 
+# current age by computing
 # return: (year,month)
 def compute_currentAge(missingDateInDatetime,missingAgeInDays):
 	if missingDateInDatetime and missingAgeInDays:
