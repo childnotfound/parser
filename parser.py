@@ -148,10 +148,12 @@ if __name__ == '__main__':
 				continue
 
 			html=response.read()
+			print "=" * 20
 		
 			# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
 			# so I detect if 失蹤年齡 in the html to make sure there's only one kid information in the page.
 			if keys_big5[3] not in html:
+				print "error: failed to get page for id %s, page format not matched!" % id
 				continue
 			
 			kid = {}
@@ -160,7 +162,6 @@ if __name__ == '__main__':
 			parser.feed(html)
 
 			# now we have the data by id in kid{}
-			print "=" * 20
 
 			kid_csv = []
 
