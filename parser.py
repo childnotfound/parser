@@ -20,7 +20,6 @@ keys = [
 	"missingAgeInDays", # computed from missingAge
 	"missingDateInDatetime", # convert missingAge to Datetime
 	"currentAgeInDays" # computed from missingAgeInDays and missingDateInDatetime
-							# should be same as currentAge
 	]
 
 kid = {}
