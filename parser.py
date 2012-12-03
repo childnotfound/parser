@@ -7,13 +7,19 @@ import sys
 import re
 import datetime 
 
-# the first 9 keys in keys_utf8 and keys should be synced in the same order.
-# CurrentAge can be computed from missingAge and missingDate
+# The first 9 keys in keys_utf8 and keys should be synced in the same order.
+# Only the first 10 keys in keys[] are retrieved from html crawling.
 keys_big5 = []
 keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
 keys = [
 	"name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation",
-	"missingCause","avatar","id","missingAgeInDays","missingDateInDatetime","currentAgeByComputing"
+	"missingCause",
+	"avatar", 
+	"id",
+	"missingAgeInDays", # computed from missingAge
+	"missingDateInDatetime", # convert missingAge to Datetime
+	"currentAgeByComputing" # computed from missingAgeInDays and missingDateInDatetime
+							# should be same as currentAge
 	]
 
 kid = {}
@@ -27,6 +33,7 @@ days_in_year = 365.25
 days_in_month = 30.4375 # days_in_year/12
 
 # missingAge=3 歲 0 月
+# return: days in timedelta
 def missingAge_to_days(s):
 	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
 	m=p.match(s)
@@ -37,6 +44,7 @@ def missingAge_to_days(s):
 		return None
 
 # missingDate=民國89年6月
+# return: date in datetime 
 def missingDate_to_datetime(s):
 	p=re.compile(r'\s*民國\s*(\d+)\s*年\s*(\d+)\s*月\s*')
 	m=p.match(s)
@@ -46,6 +54,7 @@ def missingDate_to_datetime(s):
 	else: 
 		return None
 
+# return: (year,month)
 def compute_currentAge(missingDateInDatetime,missingAgeInDays):
 	if missingDateInDatetime and missingAgeInDays:
 		d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
