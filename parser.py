@@ -121,6 +121,11 @@ class MyHTMLParser(HTMLParser):
 
 if __name__ == '__main__':
 
+	v = (2,7,3)
+	if sys.version_info < v:
+		print "error: this script has to run with python version %s.%s.%s" % v
+		sys.exit()
+
 	if len(sys.argv) != 3:
 		print "usage: %s start_id count" % sys.argv[0]
 		sys.exit()
