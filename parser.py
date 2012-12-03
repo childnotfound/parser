@@ -6,16 +6,17 @@ import urllib2
 import sys
 import re
 import datetime 
+import csv
 
-# The first 9 keys in keys_utf8 and keys should be synced in the same order.
+# The keys in keys_utf8[] and keys[] should be synced in the same order.
 # Only the first 10 keys in keys[] are retrieved from html crawling.
 keys_big5 = []
-keys_utf8 = ["姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
+keys_utf8 = ["","姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
+# keys is in csv header order
 keys = [
-	"name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation",
+	"id","name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation",
 	"missingCause",
 	"avatar", 
-	"id",
 	"missingAgeInDays", # computed from missingAge
 	"missingDateInDatetime", # convert missingAge to Datetime
 	"currentAgeByComputing" # computed from missingAgeInDays and missingDateInDatetime
@@ -89,7 +90,7 @@ class MyHTMLParser(HTMLParser):
 		# the value is 3 tags after key
 		if self.current_key == None:
 			for key in keys_utf8:
-				if key in data:
+				if key and key in data:
 					self.current_key = key
 					self.tags_to_value = 3
 		else:
@@ -131,37 +132,51 @@ if __name__ == '__main__':
 	for i,v in enumerate(keys_utf8):
 		keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
-	
 	parser = MyHTMLParser()
 
-	for i in range(int(sys.argv[2])):
-		id = i+int(sys.argv[1])
+	with open('kids.csv', 'wb') as csvfile:
+		writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+		writer.writerow(keys)
 
-		try:
-			response = opener.open(baseurl+parameter+str(id))
-		except:
-			print "http error, can't access %s" % baseurl
-			continue
+		for i in range(int(sys.argv[2])):
+			id = i+int(sys.argv[1])
 
-		html=response.read()
-	
-		# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
-		# so I detect if 失蹤年齡 in the html to make sure there's only one kid information in the page.
-		if keys_big5[3] not in html:
-			continue
+			try:
+				response = opener.open(baseurl+parameter+str(id))
+			except:
+				print "http error, can't access %s" % baseurl
+				continue
+
+			html=response.read()
 		
-		kid = {}
-		kid["id"] = id
+			# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
+			# so I detect if 失蹤年齡 in the html to make sure there's only one kid information in the page.
+			if keys_big5[3] not in html:
+				continue
+			
+			kid = {}
+			kid["id"] = id
 
-		parser.feed(html)
+			parser.feed(html)
 
-		# now we have the data by id in kid{}
-		print "=" * 20
-		for k,v in kid.iteritems():
-			print str(k)+"="+str(v)
+			# now we have the data by id in kid{}
+			print "=" * 20
 
-		# chain kid{} to kids[]
-		kids.append(kid.copy())
+			kid_csv = []
+
+			# FIXME:
+			# There should be a better way to sort a dict by key's order in another list.
+			for i in keys:
+				for k,v in kid.iteritems():
+					#print str(k)+"="+str(v)
+					if k == i:
+						print v
+						kid_csv.append(v)
+
+			writer.writerow(kid_csv)
+
+			# chain kid{} to kids[]
+			kids.append(kid.copy())
 
 """
 # to print out all data after crawling
