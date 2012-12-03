@@ -19,7 +19,7 @@ keys = [
 	"avatar", 
 	"missingAgeInDays", # computed from missingAge
 	"missingDateInDatetime", # convert missingAge to Datetime
-	"currentAgeByComputing" # computed from missingAgeInDays and missingDateInDatetime
+	"currentAgeInDays" # computed from missingAgeInDays and missingDateInDatetime
 							# should be same as currentAge
 	]
 
@@ -34,13 +34,13 @@ days_in_year = 365.25
 days_in_month = 30.4375 # days_in_year/12
 
 # missingAge=3 歲 0 月
-# return: days in timedelta
+# return: days in timedelta, days in integer
 def missingAge_to_days(s):
 	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
 	m=p.match(s)
 	if m:
 		d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
-		return datetime.timedelta(days=d)
+		return datetime.timedelta(days=d), int(d)
 	else:
 		return None
 
@@ -56,13 +56,14 @@ def missingDate_to_datetime(s):
 		return None
 
 # current age by computing
-# return: (year,month)
+# return: (year,month),days
 def compute_currentAge(missingDateInDatetime,missingAgeInDays):
 	if missingDateInDatetime and missingAgeInDays:
 		d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
-		y = int(d.days / days_in_year)
-		m = round((d.days % days_in_year) / days_in_month)
-		return y,m
+		d = d.days
+		y = int(d / days_in_year)
+		m = round((d % days_in_year) / days_in_month)
+		return (y,m),d
 	else: 
 		return None
 
@@ -72,6 +73,7 @@ class MyHTMLParser(HTMLParser):
 	tags_to_value=None
 	stag_count=0
 	etag_count=0
+	d_timedelta=None
 
 	def handle_starttag(self, tag, attrs):
 		# the avatar in html source contains 4 elements, get the value of the first one.
@@ -103,17 +105,17 @@ class MyHTMLParser(HTMLParser):
 			kid[i] = data.strip()
 
 			if i == "missingAge":
-				kid["missingAgeInDays"] = missingAge_to_days(kid[i])
+				self.d_timedelta, kid["missingAgeInDays"] = missingAge_to_days(kid[i])
 			
 			if i == "missingDate":
 				kid["missingDateInDatetime"] = missingDate_to_datetime(kid[i])
-
-			if ("missingAgeInDays" in kid) \
-				and ("missingDateInDatetime" in kid) \
-				and ("currentAgeByComputing" not in kid):
-				r = compute_currentAge(kid["missingDateInDatetime"], kid["missingAgeInDays"])
-				if r:
-					kid["currentAgeByComputing"] = "%s years, %s months" % r
+			
+			if not kid.has_key("currentAgeInDays"):
+				if ("missingAgeInDays" in kid) \
+					and ("missingDateInDatetime" in kid) \
+					and ("currentAgeInDays" not in kid):
+					_,kid["currentAgeInDays"] = compute_currentAge(kid["missingDateInDatetime"], self.d_timedelta)
+					d_timedelta = None
 
 			self.tags_to_value = None
 			self.current_key = None
