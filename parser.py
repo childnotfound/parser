@@ -135,7 +135,7 @@ if __name__ == '__main__':
 	parser = MyHTMLParser()
 
 	with open('kids.csv', 'wb') as csvfile:
-		writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+		writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 		writer.writerow(keys)
 
 		for i in range(int(sys.argv[2])):
