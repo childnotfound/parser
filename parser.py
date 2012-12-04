@@ -9,7 +9,7 @@ import datetime
 import csv
 
 # The keys in keys_utf8[] and keys[] should be synced in the same order.
-# Only the first 10 keys in keys[] are retrieved from html crawling.
+# Only the first 11 keys in keys[] are retrieved from html crawling.
 keys_big5 = []
 keys_utf8 = ["","姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
 # keys is in csv header order
@@ -124,6 +124,7 @@ if __name__ == '__main__':
 	v = (2,7,3)
 	if sys.version_info < v:
 		print "error: this script has to run with python version %s.%s.%s" % v
+		print "error: 2.7.1 and 2.7.2 are known to fail this script."
 		sys.exit()
 
 	if len(sys.argv) != 3:
