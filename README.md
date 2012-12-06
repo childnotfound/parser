@@ -5,20 +5,23 @@ usage: ./parser.py start_id count
 
 sample output
 ======
-missingAgeInDays=1095 days, 18:00:00
-missingAge=3 歲 0 月
-name=xxx
-currentAgeByComputing=15 years, 6.0 months
-missingRegion=苗栗縣竹南鎮
-character=失蹤前約90公分高、單眼皮、眼睛狹長、人中較長、頭髮濃密且髮色黑、下巴較尖、腰椎處有一片淺紫色胎記
-currentAge=15 歲 6 月
-sex=女生
-missingLocation=竹南鎮
-avatar=http://www.missingkids.org.tw/miss_focusimages/xxx.jpg
-missingDate=民國89年6月
-missingDateInDatetime=2000-06-01 00:00:00
-id=xxx
-missingCause=迷途走失
+keys = [
+	"id",			# 1~198 for now
+	"name",			# in Chinese
+	"sex",			# 男生 or 女生
+	"currentAge",	# x 歲 x 月 
+	"missingAge",	# xx 歲 x 月
+	"missingDate",	# 民國xx年x月
+	"character",	# 失蹤前約90公分高、單眼皮....
+	"missingRegion",	# 苗栗縣竹南鎮
+	"missingLocation",	# 巷口
+	"missingCause",		# 迷途走失
+	"avatar", 			# http://www.missingkids.org.tw/miss_focusimages/xxxxx.jpg
+	"missingAgeInDays", 		# computed from missingAge
+	"missingDateInDatetime", 	# convert missingDate to Datetime
+	"currentAgeInDays", 		# computed from missingAgeInDays and missingDateInDatetime
+	"missingTotalDays" 			# total missing days
+	]
 
 Requirements:
 ======
