@@ -19,3 +19,7 @@ missingDate=民國89年6月
 missingDateInDatetime=2000-06-01 00:00:00
 id=xxx
 missingCause=迷途走失
+
+Requirements:
+======
+Python 2.7.3
