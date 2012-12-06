@@ -18,9 +18,9 @@ keys = [
 	"missingCause",
 	"avatar", 
 	"missingAgeInDays", # computed from missingAge
-	"missingDateInDatetime", # convert missingAge to Datetime
+	"missingDateInDatetime", # convert missingDate to Datetime
 	"currentAgeInDays", # computed from missingAgeInDays and missingDateInDatetime
-	"missingTotalDays" # 
+	"missingTotalDays" # total missing days
 	]
 
 kid = {}
