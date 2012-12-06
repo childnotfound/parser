@@ -11,10 +11,14 @@ import csv
 # The keys in keys_utf8[] and keys[] should be synced in the same order.
 # Only the first 11 keys in keys[] are retrieved from html crawling.
 keys_big5 = []
-keys_utf8 = ["","姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區","失蹤地點","失蹤原因"]
+keys_utf8 = [
+	"","姓名","性別","現在年齡","失蹤年齡","失蹤日期","特徵","失蹤地區",\
+	"失蹤地點","失蹤原因"]
 # keys is in csv header order
 keys = [
-	"id","name","sex","currentAge","missingAge","missingDate","character","missingRegion","missingLocation",
+	"id","name","sex","currentAge","missingAge","missingDate","character",\
+	"missingRegion",
+	"missingLocation",
 	"missingCause",
 	"avatar", 
 	"missingAgeInDays", # computed from missingAge
@@ -51,7 +55,10 @@ def missingDate_to_datetime(s):
 	m=p.match(s)
 	if m:
 		# the day is 1 for datetime, should be discard when printing out.
-		return datetime.datetime(year=1911+int(m.group(1)),month=int(m.group(2)),day=1)
+		return datetime.datetime(
+				year=1911+int(m.group(1)),
+				month=int(m.group(2)),
+				day=1)
 	else: 
 		return None
 
@@ -76,8 +83,10 @@ class MyHTMLParser(HTMLParser):
 	d_timedelta=None
 
 	def handle_starttag(self, tag, attrs):
-		# the avatar in html source contains 4 elements, get the value of the first one.
-		# <img src="http://www.missingkids.org.tw/miss_focusimages/12527_s.jpg" width=75 height=100 border=0>
+		# the avatar in html source contains 4 elements, 
+		# get the value of the first one.
+		# <img src="http://www.missingkids.org.tw/miss_focusimages/12527_s.jpg" 
+		# width=75 height=100 border=0>
 		if len(attrs) == 4:
 			if "miss_focusimages" in attrs[0][1]:
 				kid["avatar"]=attrs[0][1]
@@ -107,7 +116,7 @@ class MyHTMLParser(HTMLParser):
 			# TODO: 
 			# Move the computing stuff after crawling done
 			if i == "missingAge":
-				self.d_timedelta, kid["missingAgeInDays"] = missingAge_to_days(kid[i])
+				self.d_timedelta,kid["missingAgeInDays"] = missingAge_to_days(kid[i])
 			
 			if i == "missingDate":
 				kid["missingDateInDatetime"] = missingDate_to_datetime(kid[i])
@@ -116,7 +125,9 @@ class MyHTMLParser(HTMLParser):
 				if ("missingAgeInDays" in kid) \
 					and ("missingDateInDatetime" in kid) \
 					and ("currentAgeInDays" not in kid):
-					_,kid["currentAgeInDays"] = compute_currentAge(kid["missingDateInDatetime"], self.d_timedelta)
+					_,kid["currentAgeInDays"] = compute_currentAge(
+							kid["missingDateInDatetime"], 
+							self.d_timedelta)
 					d_timedelta = None
 
 			if not kid.has_key("missingTotalDays"):
@@ -146,12 +157,19 @@ if __name__ == '__main__':
 
 	# the page is in big5, make keys in big5 for comparision.
 	for i,v in enumerate(keys_utf8):
-		keys_big5.insert(i,unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
+		keys_big5.insert(
+				i,
+				unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
 	parser = MyHTMLParser()
 
 	with open('kids.csv', 'wb') as csvfile:
-		writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+		writer = csv.writer(
+				csvfile, 
+				delimiter=',', 
+				quotechar='"', 
+				quoting=csv.QUOTE_MINIMAL)
+
 		writer.writerow(keys)
 
 		for i in range(int(sys.argv[2])):
@@ -166,10 +184,13 @@ if __name__ == '__main__':
 			html=response.read()
 			print "=" * 20
 		
-			# if the id we're looking for doesn't exist, then the page will be replaced with a list of missing kids.
-			# so I detect if 失蹤年齡 in the html to make sure there's only one kid information in the page.
+			# if the id we're looking for doesn't exist, 
+			# then the page will be replaced with a list of missing kids.
+			# so I detect if 失蹤年齡 in the html to make sure 
+			# there's only one kid information in the page.
 			if keys_big5[3] not in html:
-				print "error: failed to get page for id %s, page format not matched!" % id
+				print "error: failed to get page for id %s," % id,
+				print "page format not matched!"
 				continue
 			
 			kid = {}
@@ -182,7 +203,8 @@ if __name__ == '__main__':
 			kid_csv = []
 
 			# FIXME:
-			# There should be a better way to sort a dict by key's order in another list.
+			# There should be a better way to sort a dict 
+			# by key's order in another list.
 			for i in keys:
 				for k,v in kid.iteritems():
 					#print str(k)+"="+str(v)
