@@ -19,7 +19,8 @@ keys = [
 	"avatar", 
 	"missingAgeInDays", # computed from missingAge
 	"missingDateInDatetime", # convert missingAge to Datetime
-	"currentAgeInDays" # computed from missingAgeInDays and missingDateInDatetime
+	"currentAgeInDays", # computed from missingAgeInDays and missingDateInDatetime
+	"missingTotalDays" # 
 	]
 
 kid = {}
@@ -103,6 +104,8 @@ class MyHTMLParser(HTMLParser):
 			i = keys[i]
 			kid[i] = data.strip()
 
+			# TODO: 
+			# Move the computing stuff after crawling done
 			if i == "missingAge":
 				self.d_timedelta, kid["missingAgeInDays"] = missingAge_to_days(kid[i])
 			
@@ -115,6 +118,12 @@ class MyHTMLParser(HTMLParser):
 					and ("currentAgeInDays" not in kid):
 					_,kid["currentAgeInDays"] = compute_currentAge(kid["missingDateInDatetime"], self.d_timedelta)
 					d_timedelta = None
+
+			if not kid.has_key("missingTotalDays"):
+				if "missingDateInDatetime" in kid:
+					d = datetime.datetime.now() - kid["missingDateInDatetime"]
+					d = datetime.timedelta(d.days)
+					kid["missingTotalDays"] = int(d.days)
 
 			self.tags_to_value = None
 			self.current_key = None
