@@ -7,6 +7,7 @@ import sys
 import re
 import datetime 
 import csv
+import argparse
 
 # The keys in keys_utf8[] and keys[] should be synced in the same order.
 # Only the first 11 keys in keys[] are retrieved from html crawling.
@@ -147,9 +148,20 @@ if __name__ == '__main__':
 		print "error: 2.7.1 and 2.7.2 are known to fail this script."
 		sys.exit()
 
-	if len(sys.argv) != 3:
-		print "usage: %s start_id count" % sys.argv[0]
-		sys.exit()
+
+	# argument parsing
+	arg_parser = argparse.ArgumentParser(
+			description='HTML parser for childnotfound project, Taiwan.')
+	arg_parser.add_argument('--start', type=int, required=True,
+			help='the start id')
+	arg_parser.add_argument('--count', type=int, required=True,
+			help='total ids to get')
+	arg_parser.add_argument('-u', action="store_true", default=False, required=False,
+			help='if upload parsed data to Google drive in spreadsheet format,\
+					the public application account will be used.\
+					(not user\'s personal account)')
+
+	args = arg_parser.parse_args()
 
 	http_handler = urllib2.HTTPHandler(debuglevel=0)
 	opener = urllib2.build_opener(http_handler)
@@ -161,7 +173,7 @@ if __name__ == '__main__':
 				i,
 				unicode(keys_utf8[i],'utf-8','ignore').encode('Big5','ignore'))
 
-	parser = MyHTMLParser()
+	html_parser = MyHTMLParser()
 
 	with open('kids.csv', 'wb') as csvfile:
 		writer = csv.writer(
@@ -172,8 +184,8 @@ if __name__ == '__main__':
 
 		writer.writerow(keys)
 
-		for i in range(int(sys.argv[2])):
-			id = i+int(sys.argv[1])
+		for i in range(args.count):
+			id = i+args.start
 
 			try:
 				response = opener.open(baseurl+parameter+str(id))
@@ -196,7 +208,7 @@ if __name__ == '__main__':
 			kid = {}
 			kid["id"] = id
 
-			parser.feed(html)
+			html_parser.feed(html)
 
 			# now we have the data by id in kid{}
 
