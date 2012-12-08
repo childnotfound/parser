@@ -45,13 +45,13 @@ keys = [
 kid = {}
 kids = []
 
-baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
-parameter = "?mode=show&temp=0&id="
-avatar_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+BASEURL = "http://www.missingkids.org.tw/chinese/focus.php"
+PARAMETER = "?mode=show&temp=0&id="
 CSVFILE = os.path.expanduser('~/kid.csv')
+DRIVE_SHARE="http://goo.gl/RPpGh"
 
-days_in_year = 365.25
-days_in_month = 30.4375 # days_in_year/12
+DAYS_IN_YEAR = 365.25
+DAYS_IN_MONTH = 30.4375 # DAYS_IN_YEAR/12
 
 # missingAge=3 歲 0 月
 # return: days in timedelta, days in integer
@@ -59,7 +59,7 @@ def missingAge_to_days(s):
 	p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
 	m=p.match(s)
 	if m:
-		d = days_in_year*int(m.group(1)) + days_in_month*int(m.group(2))
+		d = DAYS_IN_YEAR*int(m.group(1)) + DAYS_IN_MONTH*int(m.group(2))
 		return datetime.timedelta(days=d), int(d)
 	else:
 		return None
@@ -84,8 +84,8 @@ def compute_currentAge(missingDateInDatetime,missingAgeInDays):
 	if missingDateInDatetime and missingAgeInDays:
 		d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
 		d = d.days
-		y = int(d / days_in_year)
-		m = round((d % days_in_year) / days_in_month)
+		y = int(d / DAYS_IN_YEAR)
+		m = round((d % DAYS_IN_YEAR) / DAYS_IN_MONTH)
 		return (y,m),d
 	else: 
 		return None
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 	arg_parser.add_argument('--upload', action="store_true", default=False, 
 			required=False,
 			help='if upload parsed data to this application\'s Google drive share \
-					in spreadsheet format')
+					in spreadsheet format at %s' % DRIVE_SHARE)
 
 	args = arg_parser.parse_args()
 
@@ -241,9 +241,9 @@ if __name__ == '__main__':
 			id = i+args.start
 
 			try:
-				response = opener.open(baseurl+parameter+str(id))
+				response = opener.open(BASEURL+PARAMETER+str(id))
 			except:
-				print "http error, can't access %s" % baseurl
+				print "http error, can't access %s" % BASEURL
 				continue
 
 			html=response.read()
