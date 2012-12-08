@@ -8,6 +8,20 @@ import re
 import datetime 
 import csv
 import argparse
+import os
+
+import pprint
+import httplib2
+import apiclient.errors
+import apiclient.http
+from apiclient.discovery import build
+from oauth2client.file import Storage
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.tools import run
+from apiclient.http import MediaFileUpload
+
+
+APP = "parser"
 
 # The keys in keys_utf8[] and keys[] should be synced in the same order.
 # Only the first 11 keys in keys[] are retrieved from html crawling.
@@ -34,6 +48,7 @@ kids = []
 baseurl = "http://www.missingkids.org.tw/chinese/focus.php"
 parameter = "?mode=show&temp=0&id="
 avatar_baseurl="http://www.missingkids.org.tw/miss_focusimages/"
+CSVFILE = os.path.expanduser('~/kid.csv')
 
 days_in_year = 365.25
 days_in_month = 30.4375 # days_in_year/12
@@ -74,6 +89,44 @@ def compute_currentAge(missingDateInDatetime,missingAgeInDays):
 		return (y,m),d
 	else: 
 		return None
+
+def getCredentials():
+	storage_file = os.path.expanduser('~/.%s.creds' % APP)
+	storage = Storage(storage_file)
+	credentials = storage.get()
+	if credentials is None or credentials.invalid == True:
+		flow = flow_from_clientsecrets(
+			os.path.expanduser('~/.%s.secrets' % APP),
+			#scope='https://www.googleapis.com/auth/drive')
+			scope='https://www.googleapis.com/auth/drive.file')
+		credentials = run(flow, storage)
+	return credentials
+
+def getAuthorizedHttp():
+	creds = getCredentials()
+	http =  httplib2.Http()
+	creds.authorize(http)
+	wrapped_request = http.request
+
+	def _Wrapper(uri, method="GET", body=None, headers=None, **kw):
+		body_to_log = body or 0
+		print('Req: %s %s len=%s' %
+					 (uri, method, body_to_log))
+		print('Req headers:\n%s' % pprint.pformat(headers))
+		if headers and headers.get('content-type') == 'application/json':
+			print('Req body:\n%s' % body)
+		resp, content = wrapped_request(uri, method, body, headers, **kw)
+		print('Rsp: %s len=%s %s' % (resp.status, len(content),
+											 resp['content-type']))
+		print('Rsp headers:\n%s' % pprint.pformat(resp))
+		if 'application/json' in resp.get('content-type'):
+			print('Rsp body:\n%s' % content)
+			""
+		return resp, content
+
+	#http.request = _Wrapper
+	return http
+
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -156,10 +209,10 @@ if __name__ == '__main__':
 			help='the start id')
 	arg_parser.add_argument('--count', type=int, required=True,
 			help='total ids to get')
-	arg_parser.add_argument('-u', action="store_true", default=False, required=False,
-			help='if upload parsed data to Google drive in spreadsheet format,\
-					the public application account will be used.\
-					(not user\'s personal account)')
+	arg_parser.add_argument('--upload', action="store_true", default=False, 
+			required=False,
+			help='if upload parsed data to this application\'s Google drive share \
+					in spreadsheet format')
 
 	args = arg_parser.parse_args()
 
@@ -175,7 +228,7 @@ if __name__ == '__main__':
 
 	html_parser = MyHTMLParser()
 
-	with open('kids.csv', 'wb') as csvfile:
+	with open(CSVFILE, 'wb') as csvfile:
 		writer = csv.writer(
 				csvfile, 
 				delimiter=',', 
@@ -228,6 +281,42 @@ if __name__ == '__main__':
 
 			# chain kid{} to kids[]
 			kids.append(kid.copy())
+
+	if args.upload:
+		DISCOVERYURL= \
+		'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
+		MIME = "text/csv"
+		FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
+
+		PARENTS=[{
+			"kind":"drive#fileLink",
+			"id":FOLDER}]
+
+		body = {
+				'title':"childnotfound: %d to %d" % \
+						(args.start, args.start+args.count-1),
+				'mimeType':MIME,
+				'parents':PARENTS}
+
+		http = getAuthorizedHttp()
+
+		drive = build('drive', 'v2',
+				discoveryServiceUrl=DISCOVERYURL, http=http)
+
+		media_body = MediaFileUpload(CSVFILE,mimetype=MIME,resumable=True)
+
+		try:
+			file = drive.files().insert(
+					body=body,
+					media_body=media_body,
+					convert=True	# so csv will be converted to spreadsheet
+					).execute()
+
+			# Uncomment the following line to print the File ID
+			print 'File ID: %s' % file['id']
+
+		except apiclient.errors.HttpError, e:
+			print 'http error:',e
 
 """
 # to print out all data after crawling
