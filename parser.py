@@ -117,7 +117,7 @@ def getAuthorizedHttp():
 			print('Req body:\n%s' % body)
 		resp, content = wrapped_request(uri, method, body, headers, **kw)
 		print('Rsp: %s len=%s %s' % (resp.status, len(content),
-											 resp['content-type']))
+			resp['content-type']))
 		print('Rsp headers:\n%s' % pprint.pformat(resp))
 		if 'application/json' in resp.get('content-type'):
 			print('Rsp body:\n%s' % content)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
 	if sys.version_info < v:
 		print "error: this script has to run with python version %s.%s.%s" % v
 		print "error: 2.7.1 and 2.7.2 are known to fail this script."
-		sys.exit()
+		sys.exit(1)
 
 
 	# argument parsing
