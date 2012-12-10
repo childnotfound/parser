@@ -97,8 +97,10 @@ def getCredentials():
 	if credentials is None or credentials.invalid == True:
 		flow = flow_from_clientsecrets(
 			os.path.expanduser('~/.%s.secrets' % APP),
-			#scope='https://www.googleapis.com/auth/drive')
-			scope='https://www.googleapis.com/auth/drive.file')
+			scope=[
+				'https://www.googleapis.com/auth/drive.file',
+				'https://www.googleapis.com/auth/fusiontables'
+				])
 		credentials = run(flow, storage)
 	return credentials
 
@@ -209,10 +211,14 @@ if __name__ == '__main__':
 			help='the start id')
 	arg_parser.add_argument('--count', type=int, required=True,
 			help='total ids to get')
-	arg_parser.add_argument('--upload', action="store_true", default=False, 
+	arg_parser.add_argument('--toss', action="store_true", default=False, 
 			required=False,
 			help='if upload parsed data to this application\'s Google drive share \
 					in spreadsheet format at %s' % DRIVE_SHARE)
+	arg_parser.add_argument('--toft', action="store_true", default=False, 
+			required=False,
+			help='if upload parsed data to this application\'s Google drive share \
+					in fusion table at %s' % DRIVE_SHARE)
 
 	args = arg_parser.parse_args()
 
@@ -282,9 +288,11 @@ if __name__ == '__main__':
 			# chain kid{} to kids[]
 			kids.append(kid.copy())
 
-	if args.upload:
-		DISCOVERYURL= \
-		'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
+	http = getAuthorizedHttp()
+	DISCOVERYURL= \
+			'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
+
+	if args.toss:
 		MIME = "text/csv"
 		FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
 
@@ -297,8 +305,6 @@ if __name__ == '__main__':
 						(args.start, args.start+args.count-1),
 				'mimeType':MIME,
 				'parents':PARENTS}
-
-		http = getAuthorizedHttp()
 
 		drive = build('drive', 'v2',
 				discoveryServiceUrl=DISCOVERYURL, http=http)
@@ -317,6 +323,10 @@ if __name__ == '__main__':
 
 		except apiclient.errors.HttpError, e:
 			print 'http error:',e
+
+	if args.toft:
+		ftable = build('fusiontables', 'v1',
+				discoveryServiceUrl=DISCOVERYURL, http=http)
 
 """
 # to print out all data after crawling
