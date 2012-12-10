@@ -129,6 +129,25 @@ def getAuthorizedHttp():
 	#http.request = _Wrapper
 	return http
 
+# read csv and convert to the fusion table
+def create_ft(f,name,description="None",isExportable="True"):
+	table = {
+			"name":name,
+			"description":description,
+			"isExportable":isExportable
+			}
+
+	csvfile = csv.reader(open(f, 'rb'))
+	cols = csvfile.next()
+	table["columns"] = []
+	
+	#TODO: sanity check for csv file
+	for c in cols:
+		d = {"type":"STRING"}
+		d["name"] = c
+		table["columns"].append(d)
+
+	return table 
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -327,6 +346,11 @@ if __name__ == '__main__':
 	if args.toft:
 		ftable = build('fusiontables', 'v1',
 				discoveryServiceUrl=DISCOVERYURL, http=http)
+		body = create_ft(CSVFILE,"aa123")
+		pprint.pprint(body)
+
+		result = ftable.table().insert(body=body).execute()
+		print result["tableId"]
 
 """
 # to print out all data after crawling
