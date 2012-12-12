@@ -35,6 +35,7 @@ keys = [
    ]
 ```
 
-Requirements:
+Requirements
 ======
 Python 2.7.3
+Google API Python Client (sudo pip install --upgrade google-api-python-client)
