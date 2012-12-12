@@ -131,23 +131,27 @@ def getAuthorizedHttp():
 
 # read csv and convert to the fusion table
 def create_ft(f,name,description="None",isExportable="True"):
-	table = {
-			"name":name,
-			"description":description,
-			"isExportable":isExportable
-			}
+    table = {
+            "name":name,
+            "description":description,
+            "isExportable":isExportable
+            }
 
-	csvfile = csv.reader(open(f, 'rb'))
-	cols = csvfile.next()
-	table["columns"] = []
-	
-	#TODO: sanity check for csv file
-	for c in cols:
-		d = {"type":"STRING"}
-		d["name"] = c
-		table["columns"].append(d)
+    with open(f, 'rb') as csvfile:
+        csvreader = csv.reader(csvfile)
+        cols = csvreader.next()
 
-	return table 
+        #csvfile = csv.reader(open(f, 'rb'))
+        #cols = csvfile.next()
+        #table["columns"] = []
+
+        #TODO: sanity check for csv file
+        for c in cols:
+            d = {"type":"STRING"}
+            d["name"] = c
+            table["columns"].append(d)
+
+    return table 
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
