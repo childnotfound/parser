@@ -351,9 +351,13 @@ if __name__ == '__main__':
 		body = create_ft(CSVFILE,"aa123")
 		pprint.pprint(body)
 
+        # table is created, get tableId
 		result = ftable.table().insert(body=body).execute()
 		print result["tableId"]
 
+        # TODO:
+        # impilment importrows()
+        
 """
 # to print out all data after crawling
 	for i in kids:
