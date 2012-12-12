@@ -351,6 +351,9 @@ if __name__ == '__main__':
 		body = create_ft(CSVFILE,"aa123")
 		pprint.pprint(body)
 
+        # TODO:
+        # move ft to opendata folder
+
         # table is created, get tableId
 		result = ftable.table().insert(body=body).execute()
 		print result["tableId"]
