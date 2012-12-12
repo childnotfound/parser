@@ -343,6 +343,8 @@ if __name__ == '__main__':
 		except apiclient.errors.HttpError, e:
 			print 'http error:',e
 
+    # TODO:
+    # toft is not finished yet.
 	if args.toft:
 		ftable = build('fusiontables', 'v1',
 				discoveryServiceUrl=DISCOVERYURL, http=http)
