@@ -39,6 +39,7 @@ keys = [
 
 Requirements
 ======
-- Python 2.7.3
+- Python 2.7.3. Python 2.7.1 and 2.7.2 are known to fail this script
 - Google API Python Client (sudo pip install --upgrade google-api-python-client)
 - OAuth2 client secret file for account application.2132s@gmail.com, get it from API console, save the file in ~/.parser.secrets
+- python-httplib2 0.7.2 or later
