@@ -2,6 +2,7 @@
 # crawler for childnotfound project 
 
 from HTMLParser import HTMLParser
+import urllib
 import urllib2
 import sys
 import re
@@ -9,6 +10,7 @@ import datetime
 import csv
 import argparse
 import os
+import json
 
 import pprint
 import httplib2
@@ -108,22 +110,18 @@ def getAuthorizedHttp():
 	creds = getCredentials()
 	http =  httplib2.Http()
 	creds.authorize(http)
-	wrapped_request = http.request
+	#wrapped_request = http.request
 
 	def _Wrapper(uri, method="GET", body=None, headers=None, **kw):
-		body_to_log = body or 0
-		print('Req: %s %s len=%s' %
-					 (uri, method, body_to_log))
+		print('Req: %s %s' % (uri, method))
 		print('Req headers:\n%s' % pprint.pformat(headers))
-		if headers and headers.get('content-type') == 'application/json':
-			print('Req body:\n%s' % body)
+		print('Req body:\n%s' % body)
 		resp, content = wrapped_request(uri, method, body, headers, **kw)
 		print('Rsp: %s len=%s %s' % (resp.status, len(content),
 			resp['content-type']))
 		print('Rsp headers:\n%s' % pprint.pformat(resp))
-		if 'application/json' in resp.get('content-type'):
-			print('Rsp body:\n%s' % content)
-			""
+		print('Rsp body:\n%s' % content)
+		print "content type=%s" % type(content)
 		return resp, content
 
 	#http.request = _Wrapper
@@ -134,16 +132,13 @@ def create_ft(f,name,description="None",isExportable="True"):
     table = {
             "name":name,
             "description":description,
-            "isExportable":isExportable
+            "isExportable":isExportable,
+			"columns":[]
             }
 
     with open(f, 'rb') as csvfile:
         csvreader = csv.reader(csvfile)
         cols = csvreader.next()
-
-        #csvfile = csv.reader(open(f, 'rb'))
-        #cols = csvfile.next()
-        #table["columns"] = []
 
         #TODO: sanity check for csv file
         for c in cols:
@@ -312,20 +307,21 @@ if __name__ == '__main__':
 			kids.append(kid.copy())
 
 	http = getAuthorizedHttp()
+
 	DISCOVERYURL= \
 			'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
+	ROOT_FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
+	TITLE = "childnotfound: %d to %d" % (args.start, args.start+args.count-1)
 
 	if args.toss:
 		MIME = "text/csv"
-		FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
 
 		PARENTS=[{
 			"kind":"drive#fileLink",
-			"id":FOLDER}]
+			"id":ROOT_FOLDER}]
 
 		body = {
-				'title':"childnotfound: %d to %d" % \
-						(args.start, args.start+args.count-1),
+				'title':TITLE,
 				'mimeType':MIME,
 				'parents':PARENTS}
 
@@ -347,28 +343,35 @@ if __name__ == '__main__':
 		except apiclient.errors.HttpError, e:
 			print 'http error:',e
 
-    # TODO:
-    # toft is not finished yet.
+	print "=" * 20
+
 	if args.toft:
 		ftable = build('fusiontables', 'v1',
 				discoveryServiceUrl=DISCOVERYURL, http=http)
-		body = create_ft(CSVFILE,"aa123")
-		pprint.pprint(body)
+		body = create_ft(CSVFILE,TITLE)
 
         # TODO:
         # move ft to opendata folder
-
         # table is created, get tableId
-		result = ftable.table().insert(body=body).execute()
-		print result["tableId"]
+		table_id = ftable.table().insert(body=body).execute()["tableId"]
+		print "Fusion table id: %s" % table_id
 
-        # TODO:
-        # impilment importrows()
-        
-"""
-# to print out all data after crawling
-	for i in kids:
-		print "=" * 20
-		for k,v in i.iteritems():
-			print str(k)+"="+str(v)
-"""			
+		params = urllib.urlencode({'isStrict': "false"})
+		URI = "https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import?%s" % (table_id, params)
+		METHOD = "POST"
+		
+		"""
+		with open(CSVFILE, 'rb') as csvfile:
+			csvreader = csv.reader(csvfile)
+			print csvreader
+			print dir(csvreader)
+		"""
+		with open(CSVFILE) as csvfile:
+			# ignore the columns
+			csvfile.readline()
+			# get the rows
+			rows = csvfile.read()
+			utf8_body = rows.decode('utf-8').encode('utf-8')
+			response, content = http.request(URI.encode('utf-8'), METHOD, body=utf8_body)
+			content = json.loads(content)
+			print "Imported rows: %s" % content["numRowsReceived"]
