@@ -331,14 +331,13 @@ if __name__ == '__main__':
 		media_body = MediaFileUpload(CSVFILE,mimetype=MIME,resumable=True)
 
 		try:
-			file = drive.files().insert(
+			ss_file = drive.files().insert(
 					body=body,
 					media_body=media_body,
 					convert=True	# so csv will be converted to spreadsheet
 					).execute()
 
-			# Uncomment the following line to print the File ID
-			print 'File ID: %s' % file['id']
+			print "The spreadsheet is located at: %s" % ss_file["alternateLink"]
 
 		except apiclient.errors.HttpError, e:
 			print 'http error:',e
@@ -375,3 +374,7 @@ if __name__ == '__main__':
 			response, content = http.request(URI.encode('utf-8'), METHOD, body=utf8_body)
 			content = json.loads(content)
 			print "Imported rows: %s" % content["numRowsReceived"]
+
+		# URL for new look 
+		FT_URL = "https://www.google.com/fusiontables/data?docid=%s" % table_id
+		print "The fusion table is located at: %s" % FT_URL
