@@ -320,6 +320,7 @@ if __name__ == '__main__':
 			discoveryServiceUrl=DISCOVERYURL, http=http)
 
 	if args.toss:
+		print "=" * 20
 		MIME = "text/csv"
 
 		PARENTS=[{
@@ -345,9 +346,8 @@ if __name__ == '__main__':
 		except apiclient.errors.HttpError, e:
 			print 'http error:',e
 
-	print "=" * 20
-
 	if args.toft:
+		print "=" * 20
 		ftable = build('fusiontables', 'v1',
 				discoveryServiceUrl=DISCOVERYURL, http=http)
 		body = create_ft(CSVFILE,TITLE)
