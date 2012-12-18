@@ -11,6 +11,7 @@ import csv
 import argparse
 import os
 import json
+import time
 
 import pprint
 import httplib2
@@ -100,7 +101,7 @@ def getCredentials():
 		flow = flow_from_clientsecrets(
 			os.path.expanduser('~/.%s.secrets' % APP),
 			scope=[
-				'https://www.googleapis.com/auth/drive.file',
+				'https://www.googleapis.com/auth/drive',
 				'https://www.googleapis.com/auth/fusiontables'
 				])
 		credentials = run(flow, storage)
@@ -310,23 +311,22 @@ if __name__ == '__main__':
 
 	DISCOVERYURL= \
 			'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
-	ROOT_FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
+	OPENDATA_FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
 	TITLE = "childnotfound: %d to %d" % (args.start, args.start+args.count-1)
+	drive = build('drive', 'v2',
+			discoveryServiceUrl=DISCOVERYURL, http=http)
 
 	if args.toss:
 		MIME = "text/csv"
 
 		PARENTS=[{
 			"kind":"drive#fileLink",
-			"id":ROOT_FOLDER}]
+			"id":OPENDATA_FOLDER}]
 
 		body = {
 				'title':TITLE,
 				'mimeType':MIME,
 				'parents':PARENTS}
-
-		drive = build('drive', 'v2',
-				discoveryServiceUrl=DISCOVERYURL, http=http)
 
 		media_body = MediaFileUpload(CSVFILE,mimetype=MIME,resumable=True)
 
@@ -349,31 +349,34 @@ if __name__ == '__main__':
 				discoveryServiceUrl=DISCOVERYURL, http=http)
 		body = create_ft(CSVFILE,TITLE)
 
-        # TODO:
-        # move ft to opendata folder
         # table is created, get tableId
-		table_id = ftable.table().insert(body=body).execute()["tableId"]
-		print "Fusion table id: %s" % table_id
+		result = ftable.table().insert(body=body).execute()
+		table_id = result["tableId"]
+		#print "Fusion table id: %s" % table_id
 
+		# move to opendata folder
+		new_parent = {'id': OPENDATA_FOLDER}
+
+		try:
+			drive.parents().insert(fileId=table_id, body=new_parent).execute()
+		except apiclient.errors.HttpError, error:
+			print 'An error occurred: %s' % error	
+
+		# export csv rows to the fusion table
 		params = urllib.urlencode({'isStrict': "false"})
 		URI = "https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import?%s" % (table_id, params)
 		METHOD = "POST"
 		
-		"""
-		with open(CSVFILE, 'rb') as csvfile:
-			csvreader = csv.reader(csvfile)
-			print csvreader
-			print dir(csvreader)
-		"""
 		with open(CSVFILE) as csvfile:
 			# ignore the columns
 			csvfile.readline()
 			# get the rows
 			rows = csvfile.read()
+			# weird issue here: the URI should be encoded with UTF-8 if body is UTF-8 too.
 			utf8_body = rows.decode('utf-8').encode('utf-8')
 			response, content = http.request(URI.encode('utf-8'), METHOD, body=utf8_body)
 			content = json.loads(content)
-			print "Imported rows: %s" % content["numRowsReceived"]
+			#print "Imported rows: %s" % content["numRowsReceived"]
 
 		# URL for new look 
 		FT_URL = "https://www.google.com/fusiontables/data?docid=%s" % table_id
