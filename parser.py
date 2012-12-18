@@ -101,6 +101,9 @@ def getCredentials():
 		flow = flow_from_clientsecrets(
 			os.path.expanduser('~/.%s.secrets' % APP),
 			scope=[
+				# if using /drive.file instead of /drive,
+				# then the fusion table is not seen by drive.files.list()
+				# also, drive.parents.insert() fails.
 				'https://www.googleapis.com/auth/drive',
 				'https://www.googleapis.com/auth/fusiontables'
 				])
