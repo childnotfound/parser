@@ -314,6 +314,7 @@ if __name__ == '__main__':
 
 	DISCOVERYURL= \
 			'https://www.googleapis.com/discovery/v1/apis/{api}/{apiVersion}/rest'
+	ROOT_FOLDER = "0ADpFOxkB8J_zUk9PVA"
 	OPENDATA_FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
 	TITLE = "childnotfound: %d to %d" % (args.start, args.start+args.count-1)
 	drive = build('drive', 'v2',
@@ -364,6 +365,13 @@ if __name__ == '__main__':
 			drive.parents().insert(fileId=table_id, body=new_parent).execute()
 		except apiclient.errors.HttpError, error:
 			print 'An error occurred: %s' % error	
+
+		# remove from root folder
+		try:
+			drive.parents().delete(fileId=table_id, parentId=ROOT_FOLDER).execute()
+		except apiclient.errors.HttpError, error:
+			print 'An error occurred: %s' % error	
+
 
 		# export csv rows to the fusion table
 		params = urllib.urlencode({'isStrict': "false"})
