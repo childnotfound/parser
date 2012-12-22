@@ -1,11 +1,30 @@
+# -*- coding: utf-8 -*-
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
+from scrapy.item import Item, Field
+from scrapy import signals
+from scrapy.xlib.pydispatch import dispatcher
 
-from cnf.items import CnfItem
 import cnf.settings as settings
 
 import copy
 import re
+import csv
+import datetime 
+
+class CnfItem(Item):
+    # define the fields for your item here like:
+    id = Field()
+    name = Field()
+    sex = Field()
+    currentAge = Field()
+    missingAge = Field()
+    missingDate = Field()
+    character = Field()
+    missingRegion = Field()
+    missingLocation = Field()
+    missingCause = Field()
+    avatar = Field()
 
 class CnfSpider(BaseSpider):
     name = "cnf"
@@ -16,12 +35,29 @@ class CnfSpider(BaseSpider):
     ID_PARAMS = "?mode=show&temp=0&id="
     
     start_urls = []
-    id = None
+
+    keys = ["id", "name", "sex", "currentAge", "missingAge", "missingDate",\
+            "character", "missingRegion", "missingLocation", "missingCause", "avatar"]
+
+    keys_ext = [
+            "missingAgeInDays",         # computed from missingAge
+            "missingDateInDatetime",    # convert missingDate to Datetime
+            "currentAgeInDays",         # computed from missingAgeInDays and missingDateInDatetime
+            "missingTotalDays",         # total missing days
+            "icon"                      # sex icon for fusion map
+            ]
+
+    DAYS_IN_YEAR = 365.25
+    DAYS_IN_MONTH = 30.4375 # DAYS_IN_YEAR/12
+    d_timedelta = None
 
     for x in range(settings.ID_START,settings.ID_END+1):
         id = str(x)
         start_urls.append(BASE_URL+ID_PARAMS+id)
  
+    def __init__(self):
+        dispatcher.connect(self.engine_stopped, signals.engine_stopped)
+
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
 
@@ -30,7 +66,7 @@ class CnfSpider(BaseSpider):
         re('\s*(.+[^\s])\s*')
 
         avatar_url = hxs.\
-                select('//img[@width=135][@height=180]/@src').\
+                select('//table[@width="500"]//img/@src').\
                 extract()
 
         item = CnfItem()
@@ -52,3 +88,102 @@ class CnfSpider(BaseSpider):
         item['avatar'] = avatar_url
 
         return copy.deepcopy([item])
+
+
+    # missingAge=3 歲 0 月
+    # return: days in timedelta, days in integer
+    def missingAge_to_days(self, s):
+        p=re.compile(r'\s*(\d+)\s*歲\s*(\d+)\s*月\s*')
+        m=p.match(s)
+        if m:
+            d = self.DAYS_IN_YEAR*int(m.group(1)) + self.DAYS_IN_MONTH*int(m.group(2))
+            return datetime.timedelta(days=d), int(d)
+        else:
+            return None
+
+    # missingDate=民國89年6月
+    # return: date in datetime 
+    def missingDate_to_datetime(self, s):
+        p=re.compile(r'\s*民國\s*(\d+)\s*年\s*(\d+)\s*月\s*')
+        m=p.match(s)
+        if m:
+            # the day is 1 for datetime, should be discard when printing out.
+            return datetime.datetime(
+                    year=1911+int(m.group(1)),
+                    month=int(m.group(2)),
+                    day=1)
+        else: 
+            return None
+
+    # current age by computing
+    # return: (year,month),days
+    def compute_currentAge(self, missingDateInDatetime, missingAgeInDays):
+        if missingDateInDatetime and missingAgeInDays:
+            d = datetime.datetime.now() - missingDateInDatetime + missingAgeInDays
+            d = d.days
+            y = int(d / self.DAYS_IN_YEAR)
+            m = round((d % self.DAYS_IN_YEAR) / self.DAYS_IN_MONTH)
+            return (y,m),d
+        else: 
+            return None
+
+    def engine_stopped(self):
+        # sort csv file in order of
+        # id, name, sex, currentAge, missingAge, missingDate, character, missingRegion, 
+        # missingLocation, missingCause, avatar
+        with open(settings.FEED_URI, 'rb') as csv_file_r:
+            reader = csv.reader(csv_file_r)
+            columns = zip(*reader)
+
+            csv_sorted = []
+
+            for k in self.keys:
+                for col in columns:
+                    if col[0] == k:
+                        csv_sorted.append(col)
+
+            rows = zip(*csv_sorted)
+            rows_ext = []
+
+
+            # compute the extra keys
+            for r in rows[1:]:
+                i_missingAge = self.keys.index("missingAge")
+                i_missingDate = self.keys.index("missingDate")
+                i_currentAge = self.keys.index("currentAge")
+                i_sex = self.keys.index("sex")
+
+                d_timedelta = missingDateInDatetime = missingAgeInDays = None
+            
+
+                # must be in the order of keys_ext
+                if i_missingAge:
+                    d_timedelta, missingAgeInDays = self.missingAge_to_days(r[i_missingAge])
+                    r += (missingAgeInDays, )
+
+                if i_missingDate:
+                    missingDateInDatetime = self.missingDate_to_datetime(r[i_missingDate])
+                    r += (missingDateInDatetime, )
+
+                if i_currentAge and missingAgeInDays:
+                    _, currentAgeInDays = self.compute_currentAge(missingDateInDatetime, d_timedelta)
+                    r += (currentAgeInDays, )
+
+                if missingDateInDatetime:
+                    d = datetime.datetime.now() - missingDateInDatetime
+                    d = datetime.timedelta(d.days)
+                    missingTotalDays = int(d.days)
+                    r += (missingTotalDays, )
+
+                if i_sex:
+                    if (u"男").encode("utf-8") in r[i_sex]:
+                        r += ("man", )
+                    else:
+                        r += ("woman", )
+
+                rows_ext.append(r)
+
+            with open(settings.SORTED_CSV, 'wb') as csv_file_w:
+                writer = csv.writer(csv_file_w)
+                writer.writerow(self.keys+self.keys_ext)
+                writer.writerows(rows_ext)
