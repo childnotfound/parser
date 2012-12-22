@@ -74,16 +74,21 @@ class CnfSpider(BaseSpider):
         m = re.match(r".+id=(\d+)",response.url)
 
         item['id'] = m.group(1)
-        
+ 
+        # the two keys have parsed
         item['name'] = data[0]
         item['sex'] = data[1]
-        item['currentAge'] = data[2]
-        item['missingAge'] = data[3]
-        item['missingDate'] = data[4]
-        item['character'] = data[5]
-        item['missingRegion'] = data[6]
-        item['missingLocation'] = data[7]
-        item['missingCause'] = data[8]
+        
+        try:
+            item['currentAge'] = data[2]
+            item['missingAge'] = data[3]
+            item['missingDate'] = data[4]
+            item['character'] = data[5]
+            item['missingRegion'] = data[6]
+            item['missingLocation'] = data[7]
+            item['missingCause'] = data[8]
+        except:
+            pass
 
         item['avatar'] = avatar_url
 
