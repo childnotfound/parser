@@ -76,7 +76,10 @@ def create_csv_cols(f,name,description="None",isExportable="True"):
 
         #TODO: sanity check for csv file
         for c in cols:
-            d = {"type":"STRING"}
+            if c == "missingRegion":
+                d = {"type":"LOCATION"}
+            else:
+                d = {"type":"STRING"}
             d["name"] = c
             table["columns"].append(d)
 
