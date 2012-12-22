@@ -133,10 +133,8 @@ class CnfSpider(BaseSpider):
             return None
 
     def engine_stopped(self):
-        # sort csv file in order of
-        # id, name, sex, currentAge, missingAge, missingDate, character, missingRegion, 
-        # missingLocation, missingCause, avatar
-        with open(settings.FEED_URI, 'rb') as csv_file_r:
+        # sort csv file in order of self.keys[]
+        with open(settings.RAW_CSV, 'rb') as csv_file_r:
             reader = csv.reader(csv_file_r)
             columns = zip(*reader)
 
@@ -150,7 +148,6 @@ class CnfSpider(BaseSpider):
             rows = zip(*csv_sorted)
             rows_ext = []
 
-
             # compute the extra keys
             for r in rows[1:]:
                 i_missingAge = self.keys.index("missingAge")
@@ -160,7 +157,6 @@ class CnfSpider(BaseSpider):
 
                 d_timedelta = missingDateInDatetime = missingAgeInDays = None
             
-
                 # must be in the order of keys_ext
                 if i_missingAge:
                     d_timedelta, missingAgeInDays = self.missingAge_to_days(r[i_missingAge])
