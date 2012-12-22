@@ -108,15 +108,15 @@ if __name__ == '__main__':
     DELIMITER = ','
     with open(os.path.expanduser(args.csv_file), 'rb') as csv_file:
         try:
-            dialect = csv.Sniffer().sniff(csv_file.read(1024))
+            dialect = csv.Sniffer().sniff(csv_file.readline())
             if dialect.delimiter != DELIMITER:
-                raise csv.Error("The delimiter of the source csv file should be \'%s\'" % DELIMITER)
+                raise csv.Error("The delimiter of the source csv file is not '%s'" % DELIMITER)
             csv_file.seek(0)
         except csv.Error,e:
             logger.error("CSV error: %s" % e)
-            pass
+            raise 
 
-    
+
     # http oauth2
     http = getAuthorizedHttp()
 
