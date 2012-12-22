@@ -26,6 +26,7 @@ optional arguments:
                         ss: to spreadsheet
 
 example: uploader.py -t ss ~/cnf.csv   # the cnf.csv file will be uploadded to Google drive of this application's account.
+```
 
 Parsed data
 ======
