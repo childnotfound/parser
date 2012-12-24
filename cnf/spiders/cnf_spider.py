@@ -158,15 +158,15 @@ class CnfSpider(BaseSpider):
                 d_timedelta = missingDateInDatetime = missingAgeInDays = None
             
                 # must be in the order of keys_ext
-                if i_missingAge:
+                if r[i_missingAge]:
                     d_timedelta, missingAgeInDays = self.missingAge_to_days(r[i_missingAge])
                     r += (missingAgeInDays, )
 
-                if i_missingDate:
+                if r[i_missingDate]:
                     missingDateInDatetime = self.missingDate_to_datetime(r[i_missingDate])
                     r += (missingDateInDatetime, )
 
-                if i_currentAge and missingAgeInDays:
+                if r[i_currentAge] and missingAgeInDays:
                     _, currentAgeInDays = self.compute_currentAge(missingDateInDatetime, d_timedelta)
                     r += (currentAgeInDays, )
 
