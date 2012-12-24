@@ -49,7 +49,6 @@ class CnfSpider(BaseSpider):
 
     DAYS_IN_YEAR = 365.25
     DAYS_IN_MONTH = 30.4375 # DAYS_IN_YEAR/12
-    d_timedelta = None
 
     for x in range(settings.ID_START,settings.ID_END+1):
         id = str(x)
@@ -150,6 +149,8 @@ class CnfSpider(BaseSpider):
 
             # compute the extra keys
             for r in rows[1:]:
+                if self.keys[4] in r:
+                    continue
                 i_missingAge = self.keys.index("missingAge")
                 i_missingDate = self.keys.index("missingDate")
                 i_currentAge = self.keys.index("currentAge")
@@ -159,16 +160,21 @@ class CnfSpider(BaseSpider):
             
                 # must be in the order of keys_ext
                 if r[i_missingAge]:
-                    d_timedelta, missingAgeInDays = self.missingAge_to_days(r[i_missingAge])
-                    r += (missingAgeInDays, )
+                    r_missingAge_to_days = self.missingAge_to_days(r[i_missingAge])
+                    if r_missingAge_to_days:
+                        d_timedelta, missingAgeInDays = r_missingAge_to_days
+                        r += (missingAgeInDays, )
 
                 if r[i_missingDate]:
                     missingDateInDatetime = self.missingDate_to_datetime(r[i_missingDate])
-                    r += (missingDateInDatetime, )
+                    if missingDateInDatetime:
+                        r += (missingDateInDatetime, )
 
                 if r[i_currentAge] and missingAgeInDays:
-                    _, currentAgeInDays = self.compute_currentAge(missingDateInDatetime, d_timedelta)
-                    r += (currentAgeInDays, )
+                    r_compute_currentAge = self.compute_currentAge(missingDateInDatetime, d_timedelta)
+                    if r_compute_currentAge:
+                        _, currentAgeInDays = r_compute_currentAge
+                        r += (currentAgeInDays, )
 
                 if missingDateInDatetime:
                     d = datetime.datetime.now() - missingDateInDatetime
@@ -176,7 +182,7 @@ class CnfSpider(BaseSpider):
                     missingTotalDays = int(d.days)
                     r += (missingTotalDays, )
 
-                if i_sex:
+                if r[i_sex]:
                     if (u"男").encode("utf-8") in r[i_sex]:
                         r += ("man", )
                     else:
