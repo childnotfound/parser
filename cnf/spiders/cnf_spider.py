@@ -149,6 +149,9 @@ class CnfSpider(BaseSpider):
 
             # compute the extra keys
             for r in rows[1:]:
+                # check if there's a key in the row,
+                # if so means there's a column already,
+                # so we skip the column.
                 if self.keys[4] in r:
                     continue
                 i_missingAge = self.keys.index("missingAge")
