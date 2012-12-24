@@ -95,7 +95,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('csv_file', help='The source file in CSV format')
 
     DEFAULT_GD_FOLDER = "0BzpFOxkB8J_zNmU0SktlTFBveHM"
-    arg_parser.add_argument('-f', '--foler_id', default=DEFAULT_GD_FOLDER, help='the target folder ID on the Google drive')
+    arg_parser.add_argument('-f', '--folder_id', default=DEFAULT_GD_FOLDER, help='the target folder ID on the Google drive')
 
     arg_parser.add_argument('-t', '--to_file', choices={"csv","ft","ss"}, required=True,
             help='convert the source format(csv) to target format on the Google drive.\
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
         PARENTS=[{
             "kind":"drive#fileLink",
-            "id":args.foler_id}]
+            "id":args.folder_id}]
 
         body = {
                 'title':TITLE,
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         logger.debug(response)
 
         # move to target folder
-        new_parent = {'id': args.foler_id}
+        new_parent = {'id': args.folder_id}
 
         try:
             drive.parents().insert(fileId=table_id, body=new_parent).execute()
