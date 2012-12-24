@@ -35,7 +35,7 @@ Parsed data
 Requirements
 ======
 - Python 2.7.3 (recommended)
-- Scrapy 1.6, w3lib, lxml(install via pip)
-- Google API client for Python(google-api-python-client, install via pip)
+- python-dev, libxml2-dev, libxslt-dev (sudo apt-get install python-dev libxml2-dev libxslt-dev)
+- scrapy 1.6, (sudo pip install scrapy)
+- Google API client for Python (sudo pip install google-api-python-client)
 - OAuth2 client secret file for account application.2132s@gmail.com, get it from API console, save the file in ~/.uploader.secrets
-- python-httplib2 0.7.2 or later
