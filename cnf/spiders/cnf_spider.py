@@ -29,7 +29,6 @@ class CnfItem(Item):
 class CnfSpider(BaseSpider):
     name = "cnf"
     allowed_domains = ["www.missingkids.org.tw"]
-    start_urls = ["http://www.missingkids.org.tw/chinese/focus.php"]
 
     BASE_URL = "http://www.missingkids.org.tw/chinese/focus.php"
     ID_PARAMS = "?mode=show&temp=0&id="
